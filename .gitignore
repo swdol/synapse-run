@@ -338,3 +338,8 @@ test_results/
 # Ai操作指引文件
 OperationGuidance/
 CLAUDE.md
+
+# ==== 报告输出文件 ====
+# 生成的HTML报告
+reports/
+*/reports/

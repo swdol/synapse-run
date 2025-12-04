@@ -48,9 +48,9 @@ def main():
         layout="wide"
     )
 
-    st.title("Insight Agent")
-    st.markdown("私有舆情数据库深度分析AI代理")
-    st.markdown("24小时全自动从包括微博、知乎、github、酷安等 13个 社媒平台、技术论坛广泛的爬取舆情数据")
+    st.title("Insight Agent - 训练数据分析助手")
+    st.markdown("中长跑训练数据深度分析AI助手")
+    st.markdown("分析你的训练记录,提供专业的训练建议和数据洞察")
 
     # 检查URL参数
     try:
@@ -74,7 +74,7 @@ def main():
     # 简化的研究查询展示区域
     
     # 如果有自动查询，使用它作为默认值，否则显示占位符
-    display_query = auto_query if auto_query else "等待从主页面接收分析内容..."
+    display_query = auto_query if auto_query else "等待接收训练分析查询...\n\n示例查询:\n- 分析我最近的训练状态和进步趋势\n- 我的配速稳定性如何\n- 最近一个月的训练强度分析"
     
     # 只读的查询展示区域
     st.text_area(
