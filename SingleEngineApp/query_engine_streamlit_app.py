@@ -41,6 +41,26 @@ def main():
     # 自定义样式
     st.markdown("""
     <style>
+        /* 隐藏Streamlit默认页眉和工具栏 */
+        header[data-testid="stHeader"] {
+            background-color: transparent;
+            background: transparent;
+        }
+
+        /* 隐藏右上角的部署按钮等 */
+        .stDeployButton {
+            display: none;
+        }
+
+        /* 隐藏顶部工具栏 */
+        #MainMenu {
+            visibility: hidden;
+        }
+
+        footer {
+            visibility: hidden;
+        }
+
         /* 主题配色 */
         :root {
             --primary-color: #3b82f6;
