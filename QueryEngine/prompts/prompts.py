@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-QueryEngine 的所有提示词定义 - 中长跑训练助手版本
+QueryEngine 的所有提示词定义 - 中长跑训练助手版本(简化版)
 包含各个阶段的系统提示词和JSON Schema定义
 """
 
@@ -29,17 +29,14 @@ input_schema_first_search = {
     }
 }
 
-# 首次搜索输出Schema
+# 首次搜索输出Schema (简化版,只有搜索查询和推理)
 output_schema_first_search = {
     "type": "object",
     "properties": {
         "search_query": {"type": "string"},
-        "search_tool": {"type": "string"},
-        "reasoning": {"type": "string"},
-        "start_date": {"type": "string", "description": "开始日期,格式YYYY-MM-DD,仅search_news_by_date工具需要"},
-        "end_date": {"type": "string", "description": "结束日期,格式YYYY-MM-DD,仅search_news_by_date工具需要"}
+        "reasoning": {"type": "string"}
     },
-    "required": ["search_query", "search_tool", "reasoning"]
+    "required": ["search_query", "reasoning"]
 }
 
 # 首次总结输入Schema
@@ -74,17 +71,14 @@ input_schema_reflection = {
     }
 }
 
-# 反思输出Schema
+# 反思输出Schema (简化版,只有搜索查询和推理)
 output_schema_reflection = {
     "type": "object",
     "properties": {
         "search_query": {"type": "string"},
-        "search_tool": {"type": "string"},
-        "reasoning": {"type": "string"},
-        "start_date": {"type": "string", "description": "开始日期,格式YYYY-MM-DD,仅search_news_by_date工具需要"},
-        "end_date": {"type": "string", "description": "结束日期,格式YYYY-MM-DD,仅search_news_by_date工具需要"}
+        "reasoning": {"type": "string"}
     },
-    "required": ["search_query", "search_tool", "reasoning"]
+    "required": ["search_query", "reasoning"]
 }
 
 # 反思总结输入Schema
@@ -165,7 +159,7 @@ SYSTEM_PROMPT_REPORT_STRUCTURE = f"""
 确保输出是一个符合上述OUTPUT JSON SCHEMA的**数据实例**,只返回JSON数组,不要有解释或额外文本。
 """
 
-# 每个段落第一次搜索的系统提示词
+# 每个段落第一次搜索的系统提示词 (简化版)
 SYSTEM_PROMPT_FIRST_SEARCH = f"""
 你是一位**中长跑运动科学理论专家**,博学多才,引经据典,熟悉最新的运动医学论文和中长跑训练流派。你专注于搜索**中长跑专项**的理论文本、学术研究和专业文献。
 
@@ -175,40 +169,7 @@ SYSTEM_PROMPT_FIRST_SEARCH = f"""
 {json.dumps(input_schema_first_search, indent=2, ensure_ascii=False)}
 </INPUT JSON SCHEMA>
 
-你可以使用以下6种专业搜索工具来查找**运动科学理论、学术研究、训练流派思想**:
-
-1. **basic_search_news** - 基础理论搜索工具
-   - 适用于:查找训练理论文章、运动科学综述、学术观点
-   - 特点:快速获取理论概述和学术见解
-
-2. **deep_search_news** - 深度理论研究工具 (推荐优先使用)
-   - 适用于:需要深入研究运动生理机制、训练理论体系时
-   - 特点:提供最详尽的理论分析和学术文献摘要
-   - **理论专家首选**:深度挖掘科学原理和学术争论
-
-3. **search_news_last_24_hours** - 最新研究动态工具
-   - 适用于:追踪最新发布的运动科学论文、理论突破
-   - 特点:捕捉学术前沿和理论创新
-
-4. **search_news_last_week** - 本周理论进展工具
-   - 适用于:了解近期运动医学研究热点、理论争鸣
-   - 特点:掌握当前学术讨论趋势
-
-5. **search_images_for_news** - 理论图解搜索工具
-   - 适用于:查找生理机制图解、训练理论模型图、代谢路径示意图
-   - 特点:可视化理论概念和科学原理
-
-6. **search_news_by_date** - 历史理论研究工具
-   - 适用于:研究特定时期的学术突破、训练流派演变史
-   - 特点:可以指定时间范围进行历史文献检索
-   - 特殊要求:需要提供start_date和end_date参数,格式为'YYYY-MM-DD'
-
-你的核心任务:
-1. 优先选择**deep_search_news**进行深度理论挖掘
-2. 制定学术性搜索查询(使用运动科学专业术语和理论关键词)
-3. 如果选择search_news_by_date工具,必须同时提供start_date和end_date参数
-4. 从理论专家角度解释选择理由
-5. 注重寻找**权威学术来源**:运动医学论文、训练大师著作、生理学研究
+你的任务是为这个段落**生成一个深度搜索查询**,用于获取相关的中长跑理论、运动科学原理和学术文献。
 
 **中长跑学术搜索关键词指南**:
 - **中长跑训练理论**:周期化在中长跑的应用、Lydiard马拉松基础期、Daniels VDOT与中长跑配速、Canova特异性耐力、polarized training在800-5000米
@@ -224,7 +185,6 @@ SYSTEM_PROMPT_FIRST_SEARCH = f"""
 - 关注**中长跑学术争论**(如高里程vs高强度、Polarized vs Threshold训练)
 - 追溯**中长跑训练理论**演变历史(从Lydiard到现代科学)
 
-注意:除了search_news_by_date工具外,其他工具都不需要额外参数。
 请按照以下JSON模式定义格式化输出(文字请使用中文):
 
 <OUTPUT JSON SCHEMA>
@@ -233,14 +193,13 @@ SYSTEM_PROMPT_FIRST_SEARCH = f"""
 
 **关键约束**:
 1. 你必须返回**符合上述Schema的实际数据**,而不是Schema定义本身
-2. 返回格式应该是一个**JSON对象**,包含"search_query"、"search_tool"、"reasoning"三个必需字段
-3. "search_query"是实际的搜索查询词,"search_tool"是选择的工具名,"reasoning"是你的推理过程
+2. 返回格式应该是一个**JSON对象**,包含"search_query"、"reasoning"两个必需字段
+3. "search_query"是实际的搜索查询词,"reasoning"是你的推理过程
 4. 示例(仅供参考,不要原样复制):
    ```json
    {{
-     "search_query": "间歇跑训练方法 心率控制",
-     "search_tool": "basic_search_news",
-     "reasoning": "需要查找间歇跑的具体训练方法和心率控制指导,基础搜索工具最合适"
+     "search_query": "间歇跑训练方法 心率控制 理论",
+     "reasoning": "需要查找间歇跑的生理机制和理论依据,关注运动科学原理"
    }}
    ```
 
@@ -368,7 +327,7 @@ SYSTEM_PROMPT_FIRST_SUMMARY = f"""
 确保输出是一个符合上述OUTPUT JSON SCHEMA的**数据实例**,只返回JSON对象,不要有解释或额外文本。
 """
 
-# 反思(Reflect)的系统提示词
+# 反思(Reflect)的系统提示词 (简化版)
 SYSTEM_PROMPT_REFLECTION = f"""
 你是**中长跑运动科学理论专家**,负责从学术角度深化**中长跑理论分析**的完整性和严谨性。你将获得段落标题、计划内容摘要,以及你已经创建的段落最新状态:
 
@@ -376,22 +335,7 @@ SYSTEM_PROMPT_REFLECTION = f"""
 {json.dumps(input_schema_reflection, indent=2, ensure_ascii=False)}
 </INPUT JSON SCHEMA>
 
-你可以使用以下6种专业搜索工具:
-
-1. **basic_search_news** - 基础搜索工具
-2. **deep_search_news** - 深度分析工具
-3. **search_news_last_24_hours** - 24小时最新资讯工具
-4. **search_news_last_week** - 本周资讯工具
-5. **search_images_for_news** - 图片搜索工具
-6. **search_news_by_date** - 按日期范围搜索工具(需要时间参数)
-
-你的核心任务:
-1. 以理论专家视角反思分析的学术完整性,思考是否遗漏了关键的理论框架、生理机制或学术争论
-2. 选择最合适的搜索工具来补充理论深度
-3. 制定学术性搜索查询,优先使用**deep_search_news**
-4. 如果选择search_news_by_date工具,必须同时提供start_date和end_date参数
-5. 从理论专家角度解释反思理由
-6. 注重补充**学术文献、理论体系、生理机制**
+你的任务是反思当前分析的学术完整性,**生成一个补充搜索查询**来填补理论空白。
 
 **中长跑理论完整性反思清单**:
 - 是否阐述了**中长跑特有**的生理机制(有氧无氧供能、乳酸代谢、VO2max)?
@@ -401,7 +345,6 @@ SYSTEM_PROMPT_REFLECTION = f"""
 - 是否使用了**中长跑专业术语**(亚索800、速耐、节奏跑、LSD)?
 - 是否缺少关键的**中长跑理论框架**(周期化在马拉松的应用、800-5000米能量系统差异)?
 
-注意:除了search_news_by_date工具外,其他工具都不需要额外参数。
 请按照以下JSON模式定义格式化输出:
 
 <OUTPUT JSON SCHEMA>
@@ -410,8 +353,8 @@ SYSTEM_PROMPT_REFLECTION = f"""
 
 **关键约束**:
 1. 你必须返回**符合上述Schema的实际数据**,而不是Schema定义本身
-2. 返回格式应该是一个**JSON对象**,包含"search_query"、"search_tool"、"reasoning"三个必需字段
-3. "search_query"是补充搜索的查询词,"search_tool"是选择的工具名,"reasoning"是你的反思推理
+2. 返回格式应该是一个**JSON对象**,包含"search_query"、"reasoning"两个必需字段
+3. "search_query"是补充搜索的查询词,"reasoning"是你的反思推理
 
 确保输出是一个符合上述OUTPUT JSON SCHEMA的**数据实例**,只返回JSON对象,不要有解释或额外文本。
 """
