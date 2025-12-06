@@ -27,7 +27,7 @@ except locale.Error:
 # 添加src目录到Python路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from InsightEngine import DeepSearchAgent, Config
+from InsightEngine import SportsScientistAgent, Config
 from config import (
     INSIGHT_ENGINE_API_KEY,
     INSIGHT_ENGINE_BASE_URL,
@@ -280,7 +280,7 @@ def execute_research(query: str, config: Config):
 
         # 初始化Sports Scientist Agent
         status_text.markdown("**正在初始化运动科学分析引擎...**")
-        agent = DeepSearchAgent(config)  # DeepSearchAgent是向后兼容的别名,实际为SportsScientistAgent
+        agent = SportsScientistAgent(config)
         st.session_state.agent = agent
 
         progress_bar.progress(10)
@@ -326,7 +326,7 @@ def execute_research(query: str, config: Config):
         st.error(f"生理数据分析过程中发生错误: {str(e)}")
 
 
-def display_results(agent: DeepSearchAgent, final_report: str):
+def display_results(agent: SportsScientistAgent, final_report: str):
     """显示科学分析结果"""
     st.markdown("---")
     st.markdown("## 科学分析报告")

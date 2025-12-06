@@ -25,7 +25,12 @@ from .utils import Config, load_config, format_search_results_for_prompt
 
 
 class LogisticsIntelligenceAgent:
-    """后勤与情报官Agent主类 (原DeepSearchAgent)"""
+    """
+    后勤与情报官Agent主类
+
+    专注于收集比赛报名、天气预报、装备价格、路线坡度等实用情报的AI代理。
+    整合博查多模态搜索工具,提供全面的情报收集和分析服务。
+    """
 
     def __init__(self, config: Optional[Config] = None):
         """

@@ -770,6 +770,3 @@ def create_agent(config_file: Optional[str] = None) -> SportsScientistAgent:
     """
     config = load_config(config_file)
     return SportsScientistAgent(config)
-
-# 向后兼容的别名
-DeepSearchAgent = SportsScientistAgent

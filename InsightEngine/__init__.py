@@ -8,10 +8,7 @@ Sports Scientist Agent (运动科学家Agent)
 from .agent import SportsScientistAgent, create_agent
 from .utils.config import Config, load_config
 
-# 向后兼容的别名
-DeepSearchAgent = SportsScientistAgent
-
 __version__ = "2.0.0"
 __author__ = "Sports Scientist Agent Team"
 
-__all__ = ["SportsScientistAgent", "DeepSearchAgent", "create_agent", "Config", "load_config"]
+__all__ = ["SportsScientistAgent", "create_agent", "Config", "load_config"]

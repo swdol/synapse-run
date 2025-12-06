@@ -4,12 +4,9 @@
 """
 
 from .agent import LogisticsIntelligenceAgent, create_agent
-# 向后兼容的别名
-DeepSearchAgent = LogisticsIntelligenceAgent
-
 from .utils.config import Config, load_config
 
 __version__ = "1.0.0"
 __author__ = "Logistics Intelligence Agent Team"
 
-__all__ = ["LogisticsIntelligenceAgent", "DeepSearchAgent", "create_agent", "Config", "load_config"]
+__all__ = ["LogisticsIntelligenceAgent", "create_agent", "Config", "load_config"]
