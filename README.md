@@ -167,9 +167,16 @@
 
 #### 1. 克隆项目
 
+**从GitHub克隆**:
 ```bash
-git clone https://github.com/your-username/synapse-run.git
-cd synapse-run/multiRunningAgents
+git clone https://github.com/zephyr4123/synapse-run.git
+cd synapse-run
+```
+
+**或从Gitee克隆**:
+```bash
+git clone https://gitee.com/zephyr123_3/synapse-run.git
+cd synapse-run
 ```
 
 #### 2. 创建Conda环境

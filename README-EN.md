@@ -167,9 +167,16 @@ All agents follow the same modular architecture design:
 
 #### 1. Clone the Project
 
+**Clone from GitHub**:
 ```bash
-git clone https://github.com/your-username/synapse-run.git
-cd synapse-run/multiRunningAgents
+git clone https://github.com/zephyr4123/synapse-run.git
+cd synapse-run
+```
+
+**Or clone from Gitee**:
+```bash
+git clone https://gitee.com/zephyr123_3/synapse-run.git
+cd synapse-run
 ```
 
 #### 2. Create Conda Environment
