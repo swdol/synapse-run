@@ -51,10 +51,10 @@ class Config:
 
     def validate(self) -> bool:
         if not self.llm_api_key:
-            print("错误: Media Engine LLM API Key 未设置 (MEDIA_ENGINE_API_KEY)。")
+            print("错误: Media Engine LLM API Key 未设置 (LLM_API_KEY)。")
             return False
         if not self.llm_model_name:
-            print("错误: Media Engine 模型名称未设置 (MEDIA_ENGINE_MODEL_NAME)。")
+            print("错误: Media Engine 模型名称未设置 (DEFAULT_MODEL_NAME)。")
             return False
         if not self.bocha_api_key:
             print("错误: Bocha API Key 未设置 (BOCHA_WEB_SEARCH_API_KEY)。")
@@ -71,9 +71,9 @@ class Config:
             spec.loader.exec_module(config_module)
 
             return cls(
-                llm_api_key=_get_value(config_module, "MEDIA_ENGINE_API_KEY"),
-                llm_base_url=_get_value(config_module, "MEDIA_ENGINE_BASE_URL"),
-                llm_model_name=_get_value(config_module, "MEDIA_ENGINE_MODEL_NAME"),
+                llm_api_key=_get_value(config_module, "LLM_API_KEY"),
+                llm_base_url=_get_value(config_module, "LLM_BASE_URL"),
+                llm_model_name=_get_value(config_module, "DEFAULT_MODEL_NAME"),
                 bocha_api_key=_get_value(
                     config_module,
                     "BOCHA_WEB_SEARCH_API_KEY",
@@ -101,9 +101,9 @@ class Config:
                         config_dict[key.strip()] = value.strip()
 
         return cls(
-            llm_api_key=_get_value(config_dict, "MEDIA_ENGINE_API_KEY"),
-            llm_base_url=_get_value(config_dict, "MEDIA_ENGINE_BASE_URL"),
-            llm_model_name=_get_value(config_dict, "MEDIA_ENGINE_MODEL_NAME"),
+            llm_api_key=_get_value(config_dict, "LLM_API_KEY"),
+            llm_base_url=_get_value(config_dict, "LLM_BASE_URL"),
+            llm_model_name=_get_value(config_dict, "DEFAULT_MODEL_NAME"),
             bocha_api_key=_get_value(
                 config_dict,
                 "BOCHA_WEB_SEARCH_API_KEY",

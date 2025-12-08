@@ -53,10 +53,10 @@ class Config:
 
     def validate(self) -> bool:
         if not self.llm_api_key:
-            print("错误: Report Engine LLM API Key 未设置 (REPORT_ENGINE_API_KEY)。")
+            print("错误: Report Engine LLM API Key 未设置 (LLM_API_KEY)。")
             return False
         if not self.llm_model_name:
-            print("错误: Report Engine 模型名称未设置 (REPORT_ENGINE_MODEL_NAME)。")
+            print("错误: Report Engine 模型名称未设置 (REPORT_MODEL_NAME)。")
             return False
         return True
 
@@ -70,9 +70,9 @@ class Config:
             spec.loader.exec_module(config_module)
 
             return cls(
-                llm_api_key=_get_value(config_module, "REPORT_ENGINE_API_KEY"),
-                llm_base_url=_get_value(config_module, "REPORT_ENGINE_BASE_URL"),
-                llm_model_name=_get_value(config_module, "REPORT_ENGINE_MODEL_NAME"),
+                llm_api_key=_get_value(config_module, "LLM_API_KEY"),
+                llm_base_url=_get_value(config_module, "LLM_BASE_URL"),
+                llm_model_name=_get_value(config_module, "REPORT_MODEL_NAME"),
                 max_content_length=int(_get_value(config_module, "MAX_CONTENT_LENGTH", 200000)),
                 output_dir=_get_value(config_module, "REPORT_OUTPUT_DIR", "final_reports"),
                 template_dir=_get_value(config_module, "TEMPLATE_DIR", "ReportEngine/report_template"),
@@ -97,9 +97,9 @@ class Config:
                         config_dict[key.strip()] = value.strip()
 
         return cls(
-            llm_api_key=_get_value(config_dict, "REPORT_ENGINE_API_KEY"),
-            llm_base_url=_get_value(config_dict, "REPORT_ENGINE_BASE_URL"),
-            llm_model_name=_get_value(config_dict, "REPORT_ENGINE_MODEL_NAME"),
+            llm_api_key=_get_value(config_dict, "LLM_API_KEY"),
+            llm_base_url=_get_value(config_dict, "LLM_BASE_URL"),
+            llm_model_name=_get_value(config_dict, "REPORT_MODEL_NAME"),
             max_content_length=int(_get_value(config_dict, "MAX_CONTENT_LENGTH", 200000)),
             output_dir=_get_value(config_dict, "REPORT_OUTPUT_DIR", "final_reports"),
             template_dir=_get_value(config_dict, "TEMPLATE_DIR", "ReportEngine/report_template"),

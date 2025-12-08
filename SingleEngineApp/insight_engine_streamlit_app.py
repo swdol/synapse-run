@@ -29,9 +29,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from InsightEngine import SportsScientistAgent, Config
 from config import (
-    INSIGHT_ENGINE_API_KEY,
-    INSIGHT_ENGINE_BASE_URL,
-    INSIGHT_ENGINE_MODEL_NAME,
+    LLM_API_KEY,
+    LLM_BASE_URL,
+    DEFAULT_MODEL_NAME,
     DB_HOST,
     DB_USER,
     DB_PASSWORD,
@@ -202,7 +202,7 @@ def main():
 
     # ----- 配置被硬编码 -----
     # 强制使用 Kimi
-    model_name = INSIGHT_ENGINE_MODEL_NAME or "kimi-k2-0711-preview"
+    model_name = DEFAULT_MODEL_NAME or "qwen-plus-latest"
     # 默认高级配置
     max_reflections = 2
     max_content_length = 500000  # Kimi支持长文本
@@ -239,8 +239,8 @@ def main():
             return
 
         # 检查配置中的LLM密钥
-        if not INSIGHT_ENGINE_API_KEY:
-            st.error("请在您的配置文件(config.py)中设置INSIGHT_ENGINE_API_KEY")
+        if not LLM_API_KEY:
+            st.error("请在您的配置文件(config.py)中设置LLM_API_KEY")
             return
 
         # 自动使用配置文件中的API密钥和数据库配置
@@ -253,8 +253,8 @@ def main():
 
         # 创建配置
         config = Config(
-            llm_api_key=INSIGHT_ENGINE_API_KEY,
-            llm_base_url=INSIGHT_ENGINE_BASE_URL,
+            llm_api_key=LLM_API_KEY,
+            llm_base_url=LLM_BASE_URL,
             llm_model_name=model_name,
             db_host=db_host,
             db_user=db_user,

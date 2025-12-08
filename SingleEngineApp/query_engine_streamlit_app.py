@@ -27,7 +27,7 @@ except locale.Error:
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from QueryEngine import TheoryExpertAgent, Config
-from config import QUERY_ENGINE_API_KEY, QUERY_ENGINE_BASE_URL, QUERY_ENGINE_MODEL_NAME, TAVILY_API_KEY
+from config import LLM_API_KEY, LLM_BASE_URL, DEFAULT_MODEL_NAME, TAVILY_API_KEY
 
 
 def main():
@@ -191,7 +191,7 @@ def main():
 
     # ----- 配置被硬编码 -----
     # 强制使用 DeepSeek
-    model_name = QUERY_ENGINE_MODEL_NAME or "deepseek-chat"
+    model_name = DEFAULT_MODEL_NAME or "qwen-plus-latest"
     # 默认高级配置
     max_reflections = 2
     max_content_length = 20000
@@ -228,21 +228,21 @@ def main():
             return
 
         # 由于强制使用DeepSeek，检查相关的API密钥
-        if not QUERY_ENGINE_API_KEY:
-            st.error("请在您的配置文件(config.py)中设置QUERY_ENGINE_API_KEY")
+        if not LLM_API_KEY:
+            st.error("请在您的配置文件(config.py)中设置LLM_API_KEY")
             return
         if not TAVILY_API_KEY:
             st.error("请在您的配置文件(config.py)中设置TAVILY_API_KEY")
             return
 
         # 自动使用配置文件中的API密钥
-        engine_key = QUERY_ENGINE_API_KEY
+        engine_key = LLM_API_KEY
         tavily_key = TAVILY_API_KEY
 
         # 创建配置
         config = Config(
             llm_api_key=engine_key,
-            llm_base_url=QUERY_ENGINE_BASE_URL,
+            llm_base_url=LLM_BASE_URL,
             llm_model_name=model_name,
             tavily_api_key=tavily_key,
             max_reflections=max_reflections,

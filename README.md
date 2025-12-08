@@ -14,8 +14,17 @@
 
 ---
 
-## 2025.12.8更新
-- 添加缺失的training_tables.sql，同时调整import_traning_data.py的文件路径，均放在scripts文件夹下（先前push太急，其添加进入gitignore却没注意）
+## 📢 更新日志
+
+### 2025.12.8 - 配置管理重构
+- **🔧 统一配置变量**: 将所有Agent的LLM配置统一为`LLM_API_KEY`、`LLM_BASE_URL`、`DEFAULT_MODEL_NAME`、`REPORT_MODEL_NAME`四个变量
+- **📝 简化配置流程**: 除ReportAgent使用`qwen3-max`外，其他Agent统一使用`qwen-plus-latest`
+- **⚠️ 重要提示**: 如果您之前使用旧版本配置，请参考[配置说明](#-配置说明)章节更新您的`config.py`文件
+
+### 2025.12.8 - 数据库脚本修复
+- 添加缺失的`training_tables.sql`，同时调整`import_traning_data.py`的文件路径，均放在`scripts`文件夹下
+
+---
 
 ## 📖 项目简介
 
@@ -186,32 +195,16 @@ DB_NAME = "traningData"  # 数据库名称
 DB_CHARSET = "utf8mb4"
 
 # ============================== LLM配置 ==============================
-# 所有LLM必须兼容OpenAI请求格式 (api_key + base_url + model_name)
+# 统一LLM配置 - 所有Agent共享相同的API Key和Base URL
+# 申请地址: https://dashscope.aliyun.com/
 
-# Insight Agent (推荐Qwen-Plus)
-INSIGHT_ENGINE_API_KEY = "your_qwen_api_key"
-INSIGHT_ENGINE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-INSIGHT_ENGINE_MODEL_NAME = "qwen-plus-latest"
+# 统一API配置
+LLM_API_KEY = "your_qwen_api_key"
+LLM_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
-# Media Agent (推荐Qwen-Plus)
-MEDIA_ENGINE_API_KEY = "your_qwen_api_key"
-MEDIA_ENGINE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-MEDIA_ENGINE_MODEL_NAME = "qwen-plus-latest"
-
-# Query Agent (推荐Qwen-Plus)
-QUERY_ENGINE_API_KEY = "your_qwen_api_key"
-QUERY_ENGINE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-QUERY_ENGINE_MODEL_NAME = "qwen-plus-latest"
-
-# Report Agent (推荐Qwen3-Max,编码能力强)
-REPORT_ENGINE_API_KEY = "your_qwen_api_key"
-REPORT_ENGINE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-REPORT_ENGINE_MODEL_NAME = "qwen3-max"
-
-# Forum Host (推荐Qwen-Plus)
-FORUM_HOST_API_KEY = "your_qwen_api_key"
-FORUM_HOST_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-FORUM_HOST_MODEL_NAME = "qwen-plus-latest"
+# 模型配置
+DEFAULT_MODEL_NAME = "qwen-plus-latest"  # 用于: InsightEngine, MediaEngine, QueryEngine, ForumHost
+REPORT_MODEL_NAME = "qwen3-max"          # 用于: ReportEngine (强编码能力)
 
 # ============================== 网络工具配置 ==============================
 # Tavily API (申请地址: https://www.tavily.com/)

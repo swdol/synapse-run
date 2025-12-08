@@ -62,11 +62,11 @@ class Config:
     def validate(self) -> bool:
         """Validate configuration."""
         if not self.llm_api_key:
-            print("错误: Insight Engine LLM API Key 未设置 (INSIGHT_ENGINE_API_KEY)。")
+            print("错误: Insight Engine LLM API Key 未设置 (LLM_API_KEY)。")
             return False
 
         if not self.llm_model_name:
-            print("错误: Insight Engine 模型名称未设置 (INSIGHT_ENGINE_MODEL_NAME)。")
+            print("错误: Insight Engine 模型名称未设置 (DEFAULT_MODEL_NAME)。")
             return False
 
         if not all([self.db_host, self.db_user, self.db_password, self.db_name]):
@@ -86,9 +86,9 @@ class Config:
             spec.loader.exec_module(config_module)
 
             return cls(
-                llm_api_key=_get_value(config_module, "INSIGHT_ENGINE_API_KEY"),
-                llm_base_url=_get_value(config_module, "INSIGHT_ENGINE_BASE_URL"),
-                llm_model_name=_get_value(config_module, "INSIGHT_ENGINE_MODEL_NAME"),
+                llm_api_key=_get_value(config_module, "LLM_API_KEY"),
+                llm_base_url=_get_value(config_module, "LLM_BASE_URL"),
+                llm_model_name=_get_value(config_module, "DEFAULT_MODEL_NAME"),
                 db_host=_get_value(config_module, "DB_HOST"),
                 db_user=_get_value(config_module, "DB_USER"),
                 db_password=_get_value(config_module, "DB_PASSWORD"),
@@ -118,9 +118,9 @@ class Config:
                         config_dict[key.strip()] = value.strip()
 
         return cls(
-            llm_api_key=_get_value(config_dict, "INSIGHT_ENGINE_API_KEY"),
-            llm_base_url=_get_value(config_dict, "INSIGHT_ENGINE_BASE_URL"),
-            llm_model_name=_get_value(config_dict, "INSIGHT_ENGINE_MODEL_NAME"),
+            llm_api_key=_get_value(config_dict, "LLM_API_KEY"),
+            llm_base_url=_get_value(config_dict, "LLM_BASE_URL"),
+            llm_model_name=_get_value(config_dict, "DEFAULT_MODEL_NAME"),
             db_host=_get_value(config_dict, "DB_HOST"),
             db_user=_get_value(config_dict, "DB_USER"),
             db_password=_get_value(config_dict, "DB_PASSWORD"),
@@ -176,9 +176,9 @@ def load_config(config_file: Optional[str] = None) -> Config:
 
                     # 从根配置创建Config对象
                     config = Config(
-                        llm_api_key=getattr(root_config, "INSIGHT_ENGINE_API_KEY", None),
-                        llm_base_url=getattr(root_config, "INSIGHT_ENGINE_BASE_URL", None),
-                        llm_model_name=getattr(root_config, "INSIGHT_ENGINE_MODEL_NAME", None),
+                        llm_api_key=getattr(root_config, "LLM_API_KEY", None),
+                        llm_base_url=getattr(root_config, "LLM_BASE_URL", None),
+                        llm_model_name=getattr(root_config, "DEFAULT_MODEL_NAME", None),
                         db_host=getattr(root_config, "DB_HOST", None),
                         db_user=getattr(root_config, "DB_USER", None),
                         db_password=getattr(root_config, "DB_PASSWORD", None),

@@ -52,10 +52,10 @@ class Config:
 
     def validate(self) -> bool:
         if not self.llm_api_key:
-            print("错误: Query Engine LLM API Key 未设置 (QUERY_ENGINE_API_KEY)。")
+            print("错误: Query Engine LLM API Key 未设置 (LLM_API_KEY)。")
             return False
         if not self.llm_model_name:
-            print("错误: Query Engine 模型名称未设置 (QUERY_ENGINE_MODEL_NAME)。")
+            print("错误: Query Engine 模型名称未设置 (DEFAULT_MODEL_NAME)。")
             return False
         if not self.tavily_api_key:
             print("错误: Tavily API Key 未设置 (TAVILY_API_KEY)。")
@@ -72,9 +72,9 @@ class Config:
             spec.loader.exec_module(config_module)
 
             return cls(
-                llm_api_key=_get_value(config_module, "QUERY_ENGINE_API_KEY"),
-                llm_base_url=_get_value(config_module, "QUERY_ENGINE_BASE_URL"),
-                llm_model_name=_get_value(config_module, "QUERY_ENGINE_MODEL_NAME"),
+                llm_api_key=_get_value(config_module, "LLM_API_KEY"),
+                llm_base_url=_get_value(config_module, "LLM_BASE_URL"),
+                llm_model_name=_get_value(config_module, "DEFAULT_MODEL_NAME"),
                 tavily_api_key=_get_value(config_module, "TAVILY_API_KEY"),
                 search_timeout=int(_get_value(config_module, "SEARCH_TIMEOUT", 240)),
                 max_content_length=int(_get_value(config_module, "SEARCH_CONTENT_MAX_LENGTH", 20000)),
@@ -98,9 +98,9 @@ class Config:
                         config_dict[key.strip()] = value.strip()
 
         return cls(
-            llm_api_key=_get_value(config_dict, "QUERY_ENGINE_API_KEY"),
-            llm_base_url=_get_value(config_dict, "QUERY_ENGINE_BASE_URL"),
-            llm_model_name=_get_value(config_dict, "QUERY_ENGINE_MODEL_NAME"),
+            llm_api_key=_get_value(config_dict, "LLM_API_KEY"),
+            llm_base_url=_get_value(config_dict, "LLM_BASE_URL"),
+            llm_model_name=_get_value(config_dict, "DEFAULT_MODEL_NAME"),
             tavily_api_key=_get_value(config_dict, "TAVILY_API_KEY"),
             search_timeout=int(_get_value(config_dict, "SEARCH_TIMEOUT", 240)),
             max_content_length=int(_get_value(config_dict, "SEARCH_CONTENT_MAX_LENGTH", 20000)),

@@ -14,6 +14,18 @@
 
 ---
 
+## 📢 Changelog
+
+### 2025.12.8 - Configuration Management Refactoring
+- **🔧 Unified Configuration Variables**: Unified all Agent LLM configurations to `LLM_API_KEY`, `LLM_BASE_URL`, `DEFAULT_MODEL_NAME`, `REPORT_MODEL_NAME` (4 variables)
+- **📝 Simplified Configuration**: Except ReportAgent using `qwen3-max`, all other Agents use `qwen-plus-latest`
+- **⚠️ Important Notice**: If you were using the old configuration, please refer to [Configuration](#-configuration) section to update your `config.py` file
+
+### 2025.12.8 - Database Script Fix
+- Added missing `training_tables.sql` and adjusted `import_traning_data.py` file path, both now in `scripts` folder
+
+---
+
 ## 📖 Project Overview
 
 **Synapse Run** is an intelligent training assistant system designed specifically for middle and long-distance running enthusiasts, built on an advanced multi-agent collaborative architecture. Through a "forum-style" interaction mechanism, the system enables multiple professional AI agents to work together and brainstorm like brain synapses, providing runners with professional and personalized training guidance.
@@ -183,32 +195,16 @@ DB_NAME = "traningData"  # Database name
 DB_CHARSET = "utf8mb4"
 
 # ============================== LLM Configuration ==============================
-# All LLMs must be compatible with OpenAI request format (api_key + base_url + model_name)
+# Unified LLM configuration - All Agents share the same API Key and Base URL
+# Apply at: https://dashscope.aliyun.com/
 
-# Insight Agent (Qwen-Plus recommended)
-INSIGHT_ENGINE_API_KEY = "your_qwen_api_key"
-INSIGHT_ENGINE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-INSIGHT_ENGINE_MODEL_NAME = "qwen-plus-latest"
+# Unified API Configuration
+LLM_API_KEY = "your_qwen_api_key"
+LLM_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
-# Media Agent (Qwen-Plus recommended)
-MEDIA_ENGINE_API_KEY = "your_qwen_api_key"
-MEDIA_ENGINE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-MEDIA_ENGINE_MODEL_NAME = "qwen-plus-latest"
-
-# Query Agent (Qwen-Plus recommended)
-QUERY_ENGINE_API_KEY = "your_qwen_api_key"
-QUERY_ENGINE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-QUERY_ENGINE_MODEL_NAME = "qwen-plus-latest"
-
-# Report Agent (Qwen3-Max recommended for strong coding ability)
-REPORT_ENGINE_API_KEY = "your_qwen_api_key"
-REPORT_ENGINE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-REPORT_ENGINE_MODEL_NAME = "qwen3-max"
-
-# Forum Host (Qwen-Plus recommended)
-FORUM_HOST_API_KEY = "your_qwen_api_key"
-FORUM_HOST_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-FORUM_HOST_MODEL_NAME = "qwen-plus-latest"
+# Model Configuration
+DEFAULT_MODEL_NAME = "qwen-plus-latest"  # For: InsightEngine, MediaEngine, QueryEngine, ForumHost
+REPORT_MODEL_NAME = "qwen3-max"          # For: ReportEngine (strong coding ability)
 
 # ============================== Network Tools Configuration ==============================
 # Tavily API (Apply at: https://www.tavily.com/)
