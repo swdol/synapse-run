@@ -16,6 +16,14 @@
 
 ## 📢 Changelog
 
+### 2025.12.8 - Visual Configuration System Launch
+- **🎨 Visual Configuration Interface**: New web-based configuration page (`/setup`) supporting LLM API, Search API, and MySQL database visual configuration
+- **✅ Intelligent Health Check**: Automatic 8-item health check on system startup, redirects to configuration page if incomplete
+- **🔧 Real-time Connection Testing**: Support real-time testing of LLM API and MySQL connections before configuration
+- **🗄️ One-click Database Initialization**: Automatically create database and table structure with a single click, no manual SQL script execution needed
+- **📱 Responsive Design**: Modern UI with Morandi color scheme, horizontal layout displaying all features in one screen
+- **⚠️ Important Notice**: First-time system startup automatically redirects to configuration page, normal use after completing configuration
+
 ### 2025.12.8 - Configuration Management Refactoring
 - **🔧 Unified Configuration Variables**: Unified all Agent LLM configurations to `LLM_API_KEY`, `LLM_BASE_URL`, `DEFAULT_MODEL_NAME`, `REPORT_MODEL_NAME` (4 variables)
 - **📝 Simplified Configuration**: Except ReportAgent using `qwen3-max`, all other Agents use `qwen-plus-latest`
