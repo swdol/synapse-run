@@ -5,11 +5,15 @@
 
 from flask import Blueprint, render_template, request, jsonify
 from datetime import datetime
-from models.training_record import TrainingRecord, SessionLocal
+from models.training_record import TrainingRecordManager, SessionLocal
+import config
 import json
 import time
 
 training_data_bp = Blueprint('training_data', __name__, url_prefix='/training')
+
+# 创建训练记录管理器，从config.py读取数据源配置
+record_manager = TrainingRecordManager(data_source=config.TRAINING_DATA_SOURCE)
 
 
 @training_data_bp.route('/')
@@ -28,11 +32,12 @@ def get_records():
         per_page = int(request.args.get('per_page', 20))
 
         # 查询总数
-        total = session.query(TrainingRecord).count()
+        total = record_manager.query(session).count()
 
         # 分页查询
-        records = session.query(TrainingRecord)\
-            .order_by(TrainingRecord.start_time.desc())\
+        start_time_field = record_manager.get_field('start_time')
+        records = record_manager.query(session)\
+            .order_by(start_time_field.desc())\
             .limit(per_page)\
             .offset((page - 1) * per_page)\
             .all()
@@ -88,7 +93,7 @@ def add_record():
 
         # 创建记录
         current_ts = int(time.time())
-        record = TrainingRecord(
+        record = record_manager.create_record(
             user_id=data.get('user_id', 'default_user'),
             exercise_type=data['exercise_type'],
             duration_seconds=int(data['duration_seconds']),
@@ -125,7 +130,8 @@ def get_record(record_id):
     """获取单个训练记录"""
     session = SessionLocal()
     try:
-        record = session.query(TrainingRecord).filter(TrainingRecord.id == record_id).first()
+        Model = record_manager.get_model_class()
+        record = record_manager.query(session).filter(Model.id == record_id).first()
         if not record:
             return jsonify({'success': False, 'message': '记录不存在'}), 404
 
@@ -144,7 +150,8 @@ def update_record(record_id):
     """更新训练记录"""
     session = SessionLocal()
     try:
-        record = session.query(TrainingRecord).filter(TrainingRecord.id == record_id).first()
+        Model = record_manager.get_model_class()
+        record = record_manager.query(session).filter(Model.id == record_id).first()
         if not record:
             return jsonify({'success': False, 'message': '记录不存在'}), 404
 
@@ -206,7 +213,8 @@ def delete_record(record_id):
     """删除训练记录"""
     session = SessionLocal()
     try:
-        record = session.query(TrainingRecord).filter(TrainingRecord.id == record_id).first()
+        Model = record_manager.get_model_class()
+        record = record_manager.query(session).filter(Model.id == record_id).first()
         if not record:
             return jsonify({'success': False, 'message': '记录不存在'}), 404
 
@@ -230,9 +238,11 @@ def get_exercise_types():
     session = SessionLocal()
     try:
         # 从数据库中查询所有不同的运动类型
-        exercise_types = session.query(TrainingRecord.exercise_type)\
+        exercise_type_field = record_manager.get_field('exercise_type')
+        exercise_types = record_manager.query(session)\
+            .with_entities(exercise_type_field)\
             .distinct()\
-            .order_by(TrainingRecord.exercise_type)\
+            .order_by(exercise_type_field)\
             .all()
 
         types_list = [et[0] for et in exercise_types]
@@ -273,3 +283,41 @@ def get_data_sources():
         'success': True,
         'data': sources
     })
+
+
+@training_data_bp.route('/api/current_source', methods=['GET'])
+def get_current_source():
+    """获取当前使用的数据源"""
+    return jsonify({
+        'success': True,
+        'data': {
+            'source': record_manager.data_source,
+            'available_sources': list(record_manager.DATA_SOURCE_MAP.keys())
+        }
+    })
+
+
+@training_data_bp.route('/api/switch_source', methods=['POST'])
+def switch_source():
+    """切换数据源"""
+    try:
+        data = request.get_json()
+        new_source = data.get('source')
+
+        if not new_source:
+            return jsonify({'success': False, 'message': '缺少source参数'}), 400
+
+        record_manager.switch_source(new_source)
+
+        return jsonify({
+            'success': True,
+            'message': f'数据源已切换到: {new_source}',
+            'data': {
+                'source': record_manager.data_source,
+                'model_class': record_manager.get_model_class().__name__
+            }
+        })
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'切换失败: {str(e)}'}), 500

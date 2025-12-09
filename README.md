@@ -16,12 +16,19 @@
 
 ## 📢 更新日志
 
+### 2025.12.10 - 多数据源支持系统上线
+- **🔄 多数据源架构**: 新增`TrainingRecordManager`类,支持Keep和Garmin两种训练数据格式的动态切换
+- **📊 Garmin数据支持**: 新增`TrainingRecordGarmin`模型,支持40+专业运动指标(心率区间、功率区间、步频步幅、训练负荷等)
+- **⚙️ 字段映射系统**: 实现智能字段映射机制,自动适配不同数据源的字段差异(如Keep的`start_time` ↔ Garmin的`start_time_gmt`)
+- **🔌 API扩展**: 新增`/api/current_source`和`/api/switch_source`接口,支持运行时切换数据源
+- **💾 数据库优化**: 添加`training_records_garmin`表和独立统计视图,保持Keep和Garmin数据完全隔离
+- **📥 导入工具升级**: `import_training_data.py`支持`--source`参数,可分别导入Keep或Garmin数据
+
 ### 2025.12.8 - 训练数据导入功能修复
 - **🔧 数据库连接修复**: 修复Excel训练数据导入时的数据库认证失败问题
-- **⚡ 配置读取优化**: 移除不可靠的`importlib.reload()`机制,改为直接从config.py构建数���库引擎
+- **⚡ 配置读取优化**: 移除不可靠的`importlib.reload()`机制,改为直接从config.py构建数据库引擎
 - **✅ 稳定性提升**: TrainingDataImporter现在每次初始化都能准确读取最新的数据库配置,避免环境变量干扰
 - **📊 Web上传保障**: 确保通过Web界面(/setup)上传Excel文件时的数据库连接稳定性
-
 ### 2025.12.8 - 可视化配置系统上线
 - **🎨 可视化配置界面**: 新增Web可视化配置页面(`/setup`),支持LLM API、搜索API、MySQL数据库的可视化配置
 - **✅ 智能健康检查**: 系统启动时自动运行8项健康检查,配置不完整时自动跳转到配置页面

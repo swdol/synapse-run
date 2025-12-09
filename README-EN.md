@@ -16,6 +16,14 @@
 
 ## 📢 Changelog
 
+### 2025.12.10 - Multi-Data-Source Support System Launch
+- **🔄 Multi-Data-Source Architecture**: Introduced `TrainingRecordManager` class supporting dynamic switching between Keep and Garmin training data formats
+- **📊 Garmin Data Support**: Added `TrainingRecordGarmin` model with 40+ professional sport metrics (heart rate zones, power zones, cadence/stride, training load, etc.)
+- **⚙️ Field Mapping System**: Implemented intelligent field mapping mechanism to automatically adapt field differences between data sources (e.g., Keep's `start_time` ↔ Garmin's `start_time_gmt`)
+- **🔌 API Extension**: Added `/api/current_source` and `/api/switch_source` endpoints supporting runtime data source switching
+- **💾 Database Optimization**: Added `training_records_garmin` table and separate statistics views, keeping Keep and Garmin data completely isolated
+- **📥 Import Tool Upgrade**: `import_training_data.py` now supports `--source` parameter to import Keep or Garmin data separately
+
 ### 2025.12.8 - Training Data Import Fix
 - **🔧 Database Connection Fix**: Fixed database authentication failure during Excel training data import
 - **⚡ Configuration Reading Optimization**: Removed unreliable `importlib.reload()` mechanism, now builds database engine directly from config.py
