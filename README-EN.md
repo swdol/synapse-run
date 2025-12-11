@@ -14,6 +14,34 @@
 
 ---
 
+## ⚠️ Linux Deployment Critical Notice
+
+**Issue**: When using Garmin Connect login on Linux environments, you may encounter `ValueError: duplicate parameter name: 'timestamp_gmt'` error.
+
+**Cause**: The `garth` library (a dependency of `garminconnect`) has a duplicate parameter name issue, causing Pydantic dataclass signature generation to fail.
+
+**Solution**:
+1. Locate the dependency library file (adjust path based on your environment):
+   ```bash
+   nano <YOUR_ENV_PATH>/lib/python3.11/site-packages/garth/data/weight.py
+   ```
+
+2. Around line 17, find the following code:
+   ```python
+   datetime_utc: datetime = Field(..., alias="timestamp_gmt")
+   ```
+
+3. Modify it to:
+   ```python
+   datetime_utc: datetime = Field(..., alias="timestamp_gmt_datetime")  # Change to a different alias to avoid duplication
+   ```
+
+4. Save the file and restart the program to use Garmin Connect normally.
+
+> 💡 **Tip**: This is a known issue in the dependency library. The fix does not affect Garmin Connect's normal functionality. If you encounter permission issues, use `sudo` or switch to a user with write permissions.
+
+---
+
 ## 🎉 v1.0.0 Official Release
 
 **Release Date**: 11th December 2025 

@@ -57,3 +57,6 @@ flake8>=6.0.0
 # ===== Web服务器 =====
 fastapi==0.110.2
 uvicorn==0.29.0
+
+garminconnect
+sqlalchemy
