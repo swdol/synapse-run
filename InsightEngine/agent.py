@@ -73,6 +73,7 @@ class SportsScientistAgent:
         
         # 初始化搜索工具集 (根据config.py的TRAINING_DATA_SOURCE自动选择)
         self.search_agency = create_training_data_search()
+        self._current_data_source = self.search_agency.data_source  # 记录当前数据源
 
         # 初始化节点
         self._initialize_nodes()
@@ -93,6 +94,37 @@ class SportsScientistAgent:
             print(f"分析能力: 心率、配速、距离、时长等基础生理指标")
         elif self.search_agency.data_source == 'garmin':
             print(f"分析能力: 心率区间、步频步幅、功率、训练效果、训练负荷等专业指标")
+
+    def _refresh_search_agency_if_needed(self):
+        """
+        🔥 热更新机制: 检查配置是否变化,如果变化则重新创建搜索工具
+
+        每次执行查询前调用此方法,确保使用最新的数据源配置
+        """
+        try:
+            # 重新创建搜索工具 (内部会通过importlib.reload读取最新配置)
+            new_agency = create_training_data_search()
+            new_data_source = new_agency.data_source
+
+            # 检查数据源是否变化
+            if new_data_source != self._current_data_source:
+                print(f"🔄 检测到数据源变化: {self._current_data_source.upper()} → {new_data_source.upper()}")
+                self.search_agency = new_agency
+                self._current_data_source = new_data_source
+
+                # 输出新数据源的能力描述
+                if new_data_source == 'keep':
+                    print(f"✅ 已切换到Keep数据源 - 支持: 心率、配速、距离、时长等基础指标")
+                elif new_data_source == 'garmin':
+                    print(f"✅ 已切换到Garmin数据源 - 支持: 心率区间、步频步幅、功率、训练效果、训练负荷等专业指标")
+                print(f"✅ 新工具集: {', '.join(self.search_agency.get_supported_tools())}")
+            else:
+                # 即使数据源未变化,也要更新引用以防止其他配置变化
+                self.search_agency = new_agency
+
+        except Exception as e:
+            print(f"⚠️  刷新搜索工具失败: {e}")
+            print(f"⚠️  继续使用当前数据源: {self._current_data_source.upper()}")
     
     def _initialize_llm(self) -> LLMClient:
         """初始化LLM客户端"""
@@ -146,13 +178,25 @@ class SportsScientistAgent:
                 - "get_training_stats": 获取训练统计数据
                 - "search_by_distance_range": 按距离范围查询
                 - "search_by_heart_rate": 按心率区间查询
+                - "search_by_training_load": 按训练负荷查询 (Garmin专属)
+                - "search_by_power_zone": 按功率区间查询 (Garmin专属)
+                - "get_training_effect_analysis": 训练效果分析 (Garmin专属)
             query: 查询描述（用于日志记录）
-            **kwargs: 额外参数（如days, start_date, end_date, min_distance_km,
-                     max_distance_km, min_avg_hr, max_avg_hr, limit等）
+            **kwargs: 额外参数：
+                - days: 最近天数
+                - start_date, end_date: 日期范围
+                - min_distance_km, max_distance_km: 距离范围
+                - min_avg_hr, max_avg_hr: 心率范围
+                - min_load, max_load: 训练负荷范围 (Garmin)
+                - min_avg_power, max_avg_power: 功率范围 (Garmin)
+                - limit: 结果数量限制
 
         Returns:
             DBResponse对象
         """
+        # 🔥 热更新: 每次查询前检查并更新数据源
+        self._refresh_search_agency_if_needed()
+
         print(f"  → 执行训练数据查询工具: {tool_name}")
         print(f"  📋 查询描述: '{query}'")
 
@@ -218,6 +262,46 @@ class SportsScientistAgent:
                     min_avg_hr=min_avg_hr,
                     max_avg_hr=max_avg_hr,
                     limit=limit
+                )
+
+            elif tool_name == "search_by_training_load":
+                # Garmin专属: 按训练负荷查询
+                min_load = kwargs.get("min_load")
+                if min_load is None:
+                    raise ValueError("search_by_training_load工具需要min_load参数")
+
+                max_load = kwargs.get("max_load")
+                limit = kwargs.get("limit", 50)
+
+                response = self.search_agency.search_by_training_load(
+                    min_load=min_load,
+                    max_load=max_load,
+                    limit=limit
+                )
+
+            elif tool_name == "search_by_power_zone":
+                # Garmin专属: 按功率区间查询
+                min_avg_power = kwargs.get("min_avg_power")
+                if min_avg_power is None:
+                    raise ValueError("search_by_power_zone工具需要min_avg_power参数")
+
+                max_avg_power = kwargs.get("max_avg_power")
+                limit = kwargs.get("limit", 50)
+
+                response = self.search_agency.search_by_power_zone(
+                    min_avg_power=min_avg_power,
+                    max_avg_power=max_avg_power,
+                    limit=limit
+                )
+
+            elif tool_name == "get_training_effect_analysis":
+                # Garmin专属: 训练效果分析
+                start_date = kwargs.get("start_date")
+                end_date = kwargs.get("end_date")
+
+                response = self.search_agency.get_training_effect_analysis(
+                    start_date=start_date,
+                    end_date=end_date
                 )
 
             else:
@@ -404,6 +488,42 @@ class SportsScientistAgent:
                 search_tool = "search_recent_trainings"
                 search_kwargs = {"days": 30, "limit": 50}
 
+        # search_by_training_load: 需要min_load (Garmin专属)
+        elif search_tool == "search_by_training_load":
+            min_load = search_output.get("min_load")
+            if min_load is not None:
+                search_kwargs["min_load"] = min_load
+                search_kwargs["max_load"] = search_output.get("max_load")
+                search_kwargs["limit"] = search_output.get("limit") or 50
+                print(f"  - 训练负荷范围: {min_load}+")
+            else:
+                print(f"    ⚠️ 缺少min_load参数,改用search_recent_trainings")
+                search_tool = "search_recent_trainings"
+                search_kwargs = {"days": 30, "limit": 50}
+
+        # search_by_power_zone: 需要min_avg_power (Garmin专属)
+        elif search_tool == "search_by_power_zone":
+            min_avg_power = search_output.get("min_avg_power")
+            if min_avg_power is not None:
+                search_kwargs["min_avg_power"] = min_avg_power
+                search_kwargs["max_avg_power"] = search_output.get("max_avg_power")
+                search_kwargs["limit"] = search_output.get("limit") or 50
+                print(f"  - 功率范围: {min_avg_power}W+")
+            else:
+                print(f"    ⚠️ 缺少min_avg_power参数,改用search_recent_trainings")
+                search_tool = "search_recent_trainings"
+                search_kwargs = {"days": 30, "limit": 50}
+
+        # get_training_effect_analysis: 可选start_date和end_date (Garmin专属)
+        elif search_tool == "get_training_effect_analysis":
+            start_date = search_output.get("start_date")
+            end_date = search_output.get("end_date")
+            if start_date and self._validate_date_format(start_date):
+                search_kwargs["start_date"] = start_date
+            if end_date and self._validate_date_format(end_date):
+                search_kwargs["end_date"] = end_date
+            print(f"  - 获取训练效果分析")
+
         else:
             print(f"    ⚠️ 未知工具 {search_tool},使用search_recent_trainings")
             search_tool = "search_recent_trainings"
@@ -425,16 +545,21 @@ class SportsScientistAgent:
                 duration_min = f"{int(result.duration_seconds)//60}分{int(result.duration_seconds)%60}秒"
                 pace_str = f"{int(result.pace_per_km//60)}'{int(result.pace_per_km%60):02d}\"/km" if result.pace_per_km else "未知配速"
 
-                title = f"[{result.exercise_type}] {result.start_time.strftime('%Y-%m-%d %H:%M')} - {distance_km}"
+                # 兼容Keep和Garmin数据源的字段差异
+                sport_type = getattr(result, 'exercise_type', None) or getattr(result, 'sport_type', '未知')
+                start_time = getattr(result, 'start_time', None) or getattr(result, 'start_time_gmt', None)
+                calories = getattr(result, 'calories', None) or getattr(result, 'activity_calories', None)
+
+                title = f"[{sport_type}] {start_time.strftime('%Y-%m-%d %H:%M')} - {distance_km}"
                 content = (
-                    f"运动类型: {result.exercise_type}\n"
-                    f"开始时间: {result.start_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    f"运动类型: {sport_type}\n"
+                    f"开始时间: {start_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
                     f"持续时间: {duration_min}\n"
                     f"距离: {distance_km}\n"
                     f"配速: {pace_str}\n"
                     f"平均心率: {result.avg_heart_rate or '未知'}bpm\n"
                     f"最大心率: {result.max_heart_rate or '未知'}bpm\n"
-                    f"卡路里: {result.calories or '未知'}kcal"
+                    f"卡路里: {calories or '未知'}kcal"
                 )
 
                 search_results.append({
@@ -443,11 +568,11 @@ class SportsScientistAgent:
                     'content': content,
                     'score': result.avg_heart_rate or 0,  # 使用心率作为评分
                     'raw_content': content,
-                    'published_date': result.start_time.isoformat(),
+                    'published_date': start_time.isoformat(),
                     'platform': "训练记录数据库",
-                    'content_type': result.exercise_type,
+                    'content_type': sport_type,
                     'author': result.user_id,
-                    'engagement': result.calories or 0
+                    'engagement': calories or 0
                 })
         
         if search_results:
@@ -573,6 +698,42 @@ class SportsScientistAgent:
                     search_tool = "search_recent_trainings"
                     search_kwargs = {"days": 30, "limit": 50}
 
+            # search_by_training_load: 需要min_load (Garmin专属)
+            elif search_tool == "search_by_training_load":
+                min_load = reflection_output.get("min_load")
+                if min_load is not None:
+                    search_kwargs["min_load"] = min_load
+                    search_kwargs["max_load"] = reflection_output.get("max_load")
+                    search_kwargs["limit"] = reflection_output.get("limit") or 50
+                    print(f"    训练负荷范围: {min_load}+")
+                else:
+                    print(f"      ⚠️ 缺少min_load参数,改用search_recent_trainings")
+                    search_tool = "search_recent_trainings"
+                    search_kwargs = {"days": 30, "limit": 50}
+
+            # search_by_power_zone: 需要min_avg_power (Garmin专属)
+            elif search_tool == "search_by_power_zone":
+                min_avg_power = reflection_output.get("min_avg_power")
+                if min_avg_power is not None:
+                    search_kwargs["min_avg_power"] = min_avg_power
+                    search_kwargs["max_avg_power"] = reflection_output.get("max_avg_power")
+                    search_kwargs["limit"] = reflection_output.get("limit") or 50
+                    print(f"    功率范围: {min_avg_power}W+")
+                else:
+                    print(f"      ⚠️ 缺少min_avg_power参数,改用search_recent_trainings")
+                    search_tool = "search_recent_trainings"
+                    search_kwargs = {"days": 30, "limit": 50}
+
+            # get_training_effect_analysis: 可选start_date和end_date (Garmin专属)
+            elif search_tool == "get_training_effect_analysis":
+                start_date = reflection_output.get("start_date")
+                end_date = reflection_output.get("end_date")
+                if start_date and self._validate_date_format(start_date):
+                    search_kwargs["start_date"] = start_date
+                if end_date and self._validate_date_format(end_date):
+                    search_kwargs["end_date"] = end_date
+                print(f"    获取训练效果分析")
+
             else:
                 print(f"      ⚠️ 未知工具 {search_tool},使用search_recent_trainings")
                 search_tool = "search_recent_trainings"
@@ -594,16 +755,21 @@ class SportsScientistAgent:
                     duration_min = f"{int(result.duration_seconds)//60}分{int(result.duration_seconds)%60}秒"
                     pace_str = f"{int(result.pace_per_km//60)}'{int(result.pace_per_km%60):02d}\"/km" if result.pace_per_km else "未知配速"
 
-                    title = f"[{result.exercise_type}] {result.start_time.strftime('%Y-%m-%d %H:%M')} - {distance_km}"
+                    # 兼容Keep和Garmin数据源的字段差异
+                    sport_type = getattr(result, 'exercise_type', None) or getattr(result, 'sport_type', '未知')
+                    start_time = getattr(result, 'start_time', None) or getattr(result, 'start_time_gmt', None)
+                    calories = getattr(result, 'calories', None) or getattr(result, 'activity_calories', None)
+
+                    title = f"[{sport_type}] {start_time.strftime('%Y-%m-%d %H:%M')} - {distance_km}"
                     content = (
-                        f"运动类型: {result.exercise_type}\n"
-                        f"开始时间: {result.start_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+                        f"运动类型: {sport_type}\n"
+                        f"开始时间: {start_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
                         f"持续时间: {duration_min}\n"
                         f"距离: {distance_km}\n"
                         f"配速: {pace_str}\n"
                         f"平均心率: {result.avg_heart_rate or '未知'}bpm\n"
                         f"最大心率: {result.max_heart_rate or '未知'}bpm\n"
-                        f"卡路里: {result.calories or '未知'}kcal"
+                        f"卡路里: {calories or '未知'}kcal"
                     )
 
                     search_results.append({
@@ -612,11 +778,11 @@ class SportsScientistAgent:
                         'content': content,
                         'score': result.avg_heart_rate or 0,  # 使用心率作为评分
                         'raw_content': content,
-                        'published_date': result.start_time.isoformat(),
+                        'published_date': start_time.isoformat(),
                         'platform': "训练记录数据库",
-                        'content_type': result.exercise_type,
+                        'content_type': sport_type,
                         'author': result.user_id,
-                        'engagement': result.calories or 0
+                        'engagement': calories or 0
                     })
             
             if search_results:

@@ -79,26 +79,18 @@ class TrainingDataSearchFactory:
         """
         从根目录config.py读取TRAINING_DATA_SOURCE配置
 
+        ✨ 热更新机制: 使用统一的ConfigReloader工具，确保获取最新配置值
+
         Returns:
             数据源类型字符串,如果读取失败则返回None
         """
         try:
-            # 获取项目根目录
-            project_root = os.path.dirname(
-                os.path.dirname(
-                    os.path.dirname(os.path.abspath(__file__))
-                )
-            )
+            # 导入统一的配置热重载工具
+            from utils.config_reloader import get_config_value, reload_config
 
-            # 将根目录添加到sys.path
-            if project_root not in sys.path:
-                sys.path.insert(0, project_root)
-
-            # 导入根目录的config模块
-            import config as root_config
-
-            # 读取TRAINING_DATA_SOURCE配置
-            data_source = getattr(root_config, 'TRAINING_DATA_SOURCE', None)
+            # 重载配置并获取数据源
+            reload_config(verbose=True)
+            data_source = get_config_value('TRAINING_DATA_SOURCE')
 
             if not data_source:
                 print("⚠️  警告: config.py中未找到TRAINING_DATA_SOURCE配置")
@@ -107,7 +99,8 @@ class TrainingDataSearchFactory:
             return data_source
 
         except ImportError as e:
-            print(f"⚠️  警告: 无法导入根目录config.py: {e}")
+            print(f"⚠️  警告: 无法导入config_reloader: {e}")
+            print(f"   提示: 请确保utils/config_reloader.py文件存在")
             return None
         except Exception as e:
             print(f"⚠️  警告: 读取TRAINING_DATA_SOURCE配置失败: {e}")

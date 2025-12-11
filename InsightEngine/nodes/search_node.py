@@ -124,12 +124,41 @@ class FirstSearchNode(BaseNode):
                         self.log_error("无法修复JSON，使用默认查询")
                         return self._get_default_search_query()
             
+            # 检测LLM是否输出了嵌套的parameters结构 (非标准格式)
+            if "parameters" in result and isinstance(result["parameters"], dict):
+                self.log_info("检测到嵌套parameters结构，正在展开...")
+                # 将parameters字典的内容展开到顶层
+                params = result["parameters"]
+                result.update(params)
+                # 兼容tool字段 (有些LLM可能输出"tool"而不是"search_tool")
+                if "tool" in result and "search_tool" not in result:
+                    result["search_tool"] = result["tool"]
+
             # 验证和清理结果
             search_query = result.get("search_query", "")
             reasoning = result.get("reasoning", "")
+            search_tool = result.get("search_tool") or result.get("tool")
+
+            # 如果LLM只输出了工具和参数，没有search_query/reasoning (降级处理)
+            if not search_query and search_tool:
+                self.log_warning(f"LLM只输出了工具 '{search_tool}' 和参数，缺少search_query/reasoning字段")
+                # 从工具名生成默认查询描述
+                tool_name_map = {
+                    "search_recent_trainings": "最近训练数据查询",
+                    "search_by_date_range": "日期范围训练查询",
+                    "search_by_distance_range": "距离范围训练查询",
+                    "search_by_heart_rate": "心率范围训练查询",
+                    "search_by_training_load": "训练负荷范围查询",
+                    "search_by_power_zone": "功率区间训练查询",
+                    "get_training_stats": "训练统计数据查询",
+                    "get_training_effect_analysis": "训练效果分析查询"
+                }
+                search_query = tool_name_map.get(search_tool, f"{search_tool}查询")
+                reasoning = f"基于{search_tool}工具进行数据查询"
+                self.log_info(f"自动生成查询描述: {search_query}")
 
             if not search_query:
-                self.log_warning("未找到搜索查询，使用默认查询")
+                self.log_warning("未找到搜索查询且无法自动生成，使用默认查询")
                 return self._get_default_search_query()
 
             # 提取所有可能的工具参数
@@ -275,12 +304,41 @@ class ReflectionNode(BaseNode):
                         self.log_error("无法修复JSON，使用默认查询")
                         return self._get_default_reflection_query()
             
+            # 检测LLM是否输出了嵌套的parameters结构 (非标准格式)
+            if "parameters" in result and isinstance(result["parameters"], dict):
+                self.log_info("检测到嵌套parameters结构，正在展开...")
+                # 将parameters字典的内容展开到顶层
+                params = result["parameters"]
+                result.update(params)
+                # 兼容tool字段 (有些LLM可能输出"tool"而不是"search_tool")
+                if "tool" in result and "search_tool" not in result:
+                    result["search_tool"] = result["tool"]
+
             # 验证和清理结果
             search_query = result.get("search_query", "")
             reasoning = result.get("reasoning", "")
+            search_tool = result.get("search_tool") or result.get("tool")
+
+            # 如果LLM只输出了工具和参数，没有search_query/reasoning (降级处理)
+            if not search_query and search_tool:
+                self.log_warning(f"LLM只输出了工具 '{search_tool}' 和参数，缺少search_query/reasoning字段")
+                # 从工具名生成默认查询描述
+                tool_name_map = {
+                    "search_recent_trainings": "最近训练数据查询",
+                    "search_by_date_range": "日期范围训练查询",
+                    "search_by_distance_range": "距离范围训练查询",
+                    "search_by_heart_rate": "心率范围训练查询",
+                    "search_by_training_load": "训练负荷范围查询",
+                    "search_by_power_zone": "功率区间训练查询",
+                    "get_training_stats": "训练统计数据查询",
+                    "get_training_effect_analysis": "训练效果分析查询"
+                }
+                search_query = tool_name_map.get(search_tool, f"{search_tool}查询")
+                reasoning = f"基于{search_tool}工具进行数据查询"
+                self.log_info(f"自动生成查询描述: {search_query}")
 
             if not search_query:
-                self.log_warning("未找到搜索查询，使用默认查询")
+                self.log_warning("未找到搜索查询且无法自动生成，使用默认查询")
                 return self._get_default_reflection_query()
 
             # 提取所有可能的工具参数

@@ -172,19 +172,25 @@ def load_config(config_file: Optional[str] = None) -> Config:
                     sys.path.insert(0, project_root)
 
                 try:
-                    import config as root_config
+                    # 使用统一的配置热重载工具
+                    from utils.config_reloader import get_config_snapshot
 
-                    # 从根配置创建Config对象
+                    # 获取最新配置快照
+                    snapshot = get_config_snapshot()
+                    if not snapshot:
+                        raise ValueError("无法获取配置快照")
+
+                    # 从配置快照创建Config对象
                     config = Config(
-                        llm_api_key=getattr(root_config, "LLM_API_KEY", None),
-                        llm_base_url=getattr(root_config, "LLM_BASE_URL", None),
-                        llm_model_name=getattr(root_config, "DEFAULT_MODEL_NAME", None),
-                        db_host=getattr(root_config, "DB_HOST", None),
-                        db_user=getattr(root_config, "DB_USER", None),
-                        db_password=getattr(root_config, "DB_PASSWORD", None),
-                        db_name=getattr(root_config, "DB_NAME", None),
-                        db_port=int(getattr(root_config, "DB_PORT", 3306)),
-                        db_charset=getattr(root_config, "DB_CHARSET", "utf8mb4"),
+                        llm_api_key=snapshot.LLM_API_KEY,
+                        llm_base_url=snapshot.LLM_BASE_URL,
+                        llm_model_name=snapshot.DEFAULT_MODEL_NAME,
+                        db_host=snapshot.DB_HOST,
+                        db_user=snapshot.DB_USER,
+                        db_password=snapshot.DB_PASSWORD,
+                        db_name=snapshot.DB_NAME,
+                        db_port=snapshot.DB_PORT,
+                        db_charset=snapshot.DB_CHARSET,
                     )
 
                     if not config.validate():
@@ -192,7 +198,7 @@ def load_config(config_file: Optional[str] = None) -> Config:
 
                     return config
                 except ImportError as e:
-                    raise FileNotFoundError(f"无法导入根目录config.py: {e}")
+                    raise FileNotFoundError(f"无法导入配置热重载工具: {e}")
             else:
                 raise FileNotFoundError("未找到配置文件，请在InsightEngine目录或根目录创建 config.py。")
 

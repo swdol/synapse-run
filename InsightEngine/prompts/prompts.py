@@ -6,6 +6,23 @@ InsightEngine 训练数据分析提示词 - 运动科学家 (Sports Scientist)
 """
 
 import json
+import sys
+import os
+
+# 添加项目根目录到系统路径以导入config
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+import config
+
+# 导入动态工具描述模块
+from .tool_descriptions import (
+    get_tools_description,
+    get_data_features_description,
+    get_report_modules_suggestion,
+    COMMON_PARAM_REQUIREMENTS,
+    GARMIN_PARAM_REQUIREMENTS,
+    COMMON_QUERY_EXAMPLES,
+    GARMIN_QUERY_EXAMPLES
+)
 
 # ===== JSON Schema 定义 =====
 
@@ -135,18 +152,67 @@ input_schema_report_formatting = {
     }
 }
 
+
+# ===== 动态生成工具描述和参数要求 =====
+
+def _get_param_requirements() -> str:
+    """
+    根据数据源动态生成参数配置要求
+
+    Returns:
+        完整的参数配置要求文本
+    """
+    data_source = config.TRAINING_DATA_SOURCE.lower()
+
+    # 通用参数要求
+    param_text = COMMON_PARAM_REQUIREMENTS
+
+    # 如果是Garmin数据源,添加专属参数要求
+    if data_source == 'garmin':
+        param_text += GARMIN_PARAM_REQUIREMENTS
+
+    return param_text
+
+
+def _get_query_examples() -> str:
+    """
+    根据数据源动态生成查询优化示例
+
+    Returns:
+        完整的查询优化示例文本
+    """
+    data_source = config.TRAINING_DATA_SOURCE.lower()
+
+    # 通用查询示例
+    examples_text = COMMON_QUERY_EXAMPLES
+
+    # 如果是Garmin数据源,添加专属查询示例
+    if data_source == 'garmin':
+        examples_text += "\n" + GARMIN_QUERY_EXAMPLES
+
+    return examples_text
+
 # ===== 系统提示词定义 =====
 
-# 生成报告结构的系统提示词
-SYSTEM_PROMPT_REPORT_STRUCTURE = f"""
+def _generate_report_structure_prompt() -> str:
+    """
+    动态生成报告结构提示词
+    根据数据源选择合适的分析模块建议
+    """
+    data_source = config.TRAINING_DATA_SOURCE.lower()
+
+    # 获取数据源特定的报告模块建议
+    report_modules = get_report_modules_suggestion(data_source)
+
+    # 获取数据特征说明
+    data_features = get_data_features_description(data_source)
+
+    return f"""
 你是一位运动科学家(Sports Scientist),需要规划一份基于生理数据的训练分析报告结构,包含3-5个核心分析模块。
 
-**数据分析模块**(选择3-5个,基于实际可获取的数据):
-- **训练负荷量化**: 统计训练频次、累计里程、周平均距离,计算训练密度指标
-- **配速表现评估**: 量化配速数据、配速区间分布、与基准配速的偏差值,配速变化趋势
-- **心率强度监测**: 平均心率统计、心率区间分布分析、心率-配速相关性、长距离心率漂移
-- **长距离耐力评估**: 长距离训练累计、单次最长距离、15公里以上训练频次统计
-- **训练节奏分析**: 训练频次稳定性、周跑量波动、恢复间隔评估
+{data_features}
+
+{report_modules}
 
 **科学严谨性要求**:
 - 模块标题使用**专业术语**,体现科学性和精准性
@@ -160,13 +226,30 @@ SYSTEM_PROMPT_REPORT_STRUCTURE = f"""
 {json.dumps(output_schema_report_structure, indent=2, ensure_ascii=False)}
 </OUTPUT JSON SCHEMA>
 
-标题和内容属性将用于后续的数据查询和分析。
-确保输出是一个符合上述输出JSON模式定义的JSON对象。
+**重要**: 输出符合上述模式的**实际数据内容**,而不是Schema定义本身。
 只返回JSON对象,不要有解释或额外文本。
 """
 
-# 每个段落第一次搜索的系统提示词
-SYSTEM_PROMPT_FIRST_SEARCH = f"""
+# 生成报告结构的系统提示词
+SYSTEM_PROMPT_REPORT_STRUCTURE = _generate_report_structure_prompt()
+
+def _generate_first_search_prompt() -> str:
+    """
+    动态生成首次搜索提示词
+    根据数据源选择合适的工具描述和示例
+    """
+    data_source = config.TRAINING_DATA_SOURCE.lower()
+
+    # 获取数据源特定的工具描述
+    tools_description = get_tools_description(data_source)
+
+    # 获取参数配置要求
+    param_requirements = _get_param_requirements()
+
+    # 获取查询示例
+    query_examples = _get_query_examples()
+
+    return f"""
 你是一位运动科学家(Sports Scientist),负责从训练数据库中提取生理指标进行量化分析。你将获得一个分析模块的定义,需要设计精准的数据查询策略:
 
 <INPUT JSON SCHEMA>
@@ -176,34 +259,7 @@ SYSTEM_PROMPT_FIRST_SEARCH = f"""
 **🚨 重要: 系统会在输入数据前自动添加【当前日期: YYYY-MM-DD】提示 🚨**
 **请严格基于提供的当前日期计算"最近"、"近期"的时间范围,不要使用训练语料中的历史日期!**
 
-你可以使用以下5种专业的训练数据库查询工具来挖掘真实的训练记录:
-
-1. **search_recent_trainings** - 🔥 查询最近N天训练记录 (推荐用于"最近"、"近期"查询)
-   - 适用于:了解最近的训练状态、识别训练规律、分析短期进步
-   - 特点:基于当前时间自动计算,无需指定具体日期,避免时间幻觉
-   - 参数:days(必需,最近N天)、limit(可选,默认50)
-   - **优先级: 当需求包含"最近X天/周/月"时,必须优先使用此工具!**
-
-2. **search_by_date_range** - 按日期范围查询训练记录
-   - 适用于:特定历史时期的训练分析、周期性训练效果评估、训练计划回顾
-   - 特点:精确的时间范围控制,适合分析历史训练演变
-   - 参数:start_date(必需,YYYY-MM-DD)、end_date(必需,YYYY-MM-DD)、limit(可选,默认100)
-   - **⚠️ 注意: 仅用于查询明确指定的历史日期范围,不要用于"最近X天"这类相对时间查询!**
-
-3. **get_training_stats** - 获取训练统计数据
-   - 适用于:整体训练效果评估、宏观数据统计、训练量汇总
-   - 特点:自动计算总距离、平均配速、总时长等关键指标
-   - 参数:start_date(可选,YYYY-MM-DD)、end_date(可选,YYYY-MM-DD)
-
-4. **search_by_distance_range** - 按距离范围查询
-   - 适用于:长距离训练分析、特定距离训练统计、LSD训练记录
-   - 特点:精确筛选特定距离区间的训练
-   - 参数:min_distance_km(必需,最小公里数)、max_distance_km(可选,最大公里数)、limit(可选,默认50)
-
-5. **search_by_heart_rate** - 按心率区间查询
-   - 适用于:心率训练分析、有氧/无氧训练分布、训练强度评估
-   - 特点:基于心率数据筛选,分析训练强度
-   - 参数:min_avg_hr(必需,最小平均心率)、max_avg_hr(可选,最大平均心率)、limit(可选,默认50)
+{tools_description}
 
 **核心任务:基于科学方法论设计数据采集策略**
 
@@ -212,18 +268,25 @@ SYSTEM_PROMPT_FIRST_SEARCH = f"""
 2. **工具选择决策**:基于数据特征选择最优查询工具
    - **时序数据**: 当分析需求为"最近X天/周/月"时,强制使用search_recent_trainings + days参数
    - **反例**: "最近30天"误用search_by_date_range手动计算日期区间(违反科学严谨性)
-3. **参数配置验证**:
+
+3. **⚠️ 参数完整性强制检查清单 (每次必须执行) ⚠️**:
+   在输出JSON前,必须自检以下清单:
+   ✅ 如果选择search_recent_trainings → 检查: 是否已添加"days"字段?
+   ✅ 如果选择search_by_date_range → 检查: 是否已添加"start_date"和"end_date"字段?
+   ✅ 如果选择search_by_distance_range → 检查: 是否已添加"min_distance_km"字段?
+   ✅ 如果选择search_by_heart_rate → 检查: 是否已添加"min_avg_hr"字段?
+   ✅ 如果选择search_by_training_load(Garmin) → 检查: 是否已添加"min_load"字段?
+   ✅ 如果选择search_by_power_zone(Garmin) → 检查: 是否已添加"min_avg_power"字段?
+   ❌ 如果上述任一检查失败 → 重新生成JSON并补充缺失参数
+
+4. **参数配置验证**:
    - **时间窗口**: 根据生理适应周期(急性7天/慢性28天)确定采样范围
    - **必需参数**: 确保所有必需参数完整提供(days、start_date、min_distance_km等)
    - **样本量控制**: 可选配置limit参数,确保统计显著性
 
-4. **参数配置要求**:
-   - search_recent_trainings: 必须提供days参数(如7、30、90等)
-   - search_by_date_range: 必须提供start_date和end_date参数
-   - search_by_distance_range: 必须提供min_distance_km参数
-   - search_by_heart_rate: 必须提供min_avg_hr参数
+{param_requirements}
 
-4. **科学依据阐述**:基于运动生理学原理说���数据采集策略的合理性
+5. **科学依据阐述**:基于运动生理学原理说明数据采集策略的合理性
 
 **科学严谨性原则**:
 - **假设驱动**: 明确数据查询的科学假设和预期发现
@@ -231,14 +294,7 @@ SYSTEM_PROMPT_FIRST_SEARCH = f"""
 - **取样科学性**: 时间窗口、距离区间、心率区间基于生理学阈值设定
 - **工具适配性**: 时序分析用search_recent_trainings,历史对照用search_by_date_range
 
-**举例说明**:
-- ✅ 正确:"查询最近30天的训练" → search_recent_trainings, days=30
-- ❌ 错误:"查询最近30天" → search_by_date_range, start_date="[过去日期]", end_date="[今天]" (不要使用date_range查询"最近"!)
-- ✅ 正确:"分析2025年1月的训练数据" → search_by_date_range, start_date="2025-01-01", end_date="2025-01-31"
-- ✅ 正确:"统计10公里以上的长距离训练" → search_by_distance_range, min_distance_km=10
-- ✅ 正确:"分析心率130-150的有氧训练" → search_by_heart_rate, min_avg_hr=130, max_avg_hr=150
-- ✅ 正确:"最近一周的训练" → search_recent_trainings, days=7
-- ✅ 正确:"最近3个月的训练" → search_recent_trainings, days=90
+{query_examples}
 
 请按照以下JSON模式定义格式化输出(文字请使用中文):
 
@@ -246,9 +302,12 @@ SYSTEM_PROMPT_FIRST_SEARCH = f"""
 {json.dumps(output_schema_first_search, indent=2, ensure_ascii=False)}
 </OUTPUT JSON SCHEMA>
 
-确保输出是一个符合上述输出JSON模式定义的JSON对象。
+**重要**: 输出符合上述模式的**实际数据内容**,而不是Schema定义本身。
 只返回JSON对象,不要有解释或额外文本。
 """
+
+# 每个段落第一次搜索的系统提示词
+SYSTEM_PROMPT_FIRST_SEARCH = _generate_first_search_prompt()
 
 # 每个段落第一次总结的系统提示词
 SYSTEM_PROMPT_FIRST_SUMMARY = f"""
@@ -326,12 +385,27 @@ SYSTEM_PROMPT_FIRST_SUMMARY = f"""
 {json.dumps(output_schema_first_summary, indent=2, ensure_ascii=False)}
 </OUTPUT JSON SCHEMA>
 
-确保输出是一个符合上述输出JSON模式定义的JSON对象。
+**重要**: 输出符合上述模式的**实际数据内容**,而不是Schema定义本身。
 只返回JSON对象,不要有解释或额外文本。
 """
 
-# 反思(Reflect)的系统提示词
-SYSTEM_PROMPT_REFLECTION = f"""
+def _generate_reflection_prompt() -> str:
+    """
+    动态生成反思提示词
+    根据数据源选择合适的工具描述和示例
+    """
+    data_source = config.TRAINING_DATA_SOURCE.lower()
+
+    # 获取数据源特定的工具描述(简化版)
+    tools_description = get_tools_description(data_source)
+
+    # 获取参数配置要求
+    param_requirements = _get_param_requirements()
+
+    # 获取查询示例
+    query_examples = _get_query_examples()
+
+    return f"""
 你是一位运动科学家(Sports Scientist),负责对初步分析结果进行科学性验证和数据完整性审查。你将基于已有分析,识别数据缺口并补充关键指标:
 
 <INPUT JSON SCHEMA>
@@ -341,15 +415,7 @@ SYSTEM_PROMPT_REFLECTION = f"""
 **🚨 重要: 系统会在输入数据前自动添加【当前日期: YYYY-MM-DD】提示 🚨**
 **请严格基于提供的当前日期计算"最近"、"近期"的补充查询时间范围,不要使用训练语料中的历史日期!**
 
-你可以使用以下5种专业的训练数据库查询工具:
-
-1. **search_recent_trainings** - 🔥 查询最近N天训练 (推荐用于"最近"、"近期"补充查询)
-   - **优先级: 当需要补充"最近X天/周/月"数据时,必须优先使用此工具!**
-2. **search_by_date_range** - 按日期范围查询
-   - **⚠️ 注意: 仅用于明确指定的历史日期范围,不要用于"最近X天"这类相对时间查询!**
-3. **get_training_stats** - 获取统计数据
-4. **search_by_distance_range** - 按距离范围查询
-5. **search_by_heart_rate** - 按心率区间查询
+{tools_description}
 
 **核心任务:数据完整性审查与科学性验证**
 
@@ -364,17 +430,23 @@ SYSTEM_PROMPT_REFLECTION = f"""
    - 时间维度: 是否缺少近期负荷(近7天)或长期负荷(近28-60天)数据?
    - 基础指标: 配速、心率、距离、时长等核心指标是否完整?
 
-3. **精准补充查询**:
+3. **⚠️ 参数完整性强制检查清单 (每次必须执行) ⚠️**:
+   在输出JSON前,必须自检以下清单:
+   ✅ 如果选择search_recent_trainings → 检查: 是否已添加"days"字段?
+   ✅ 如果选择search_by_date_range → 检查: 是否已添加"start_date"和"end_date"字段?
+   ✅ 如果选择search_by_distance_range → 检查: 是否已添加"min_distance_km"字段?
+   ✅ 如果选择search_by_heart_rate → 检查: 是否已添加"min_avg_hr"字段?
+   ✅ 如果选择search_by_training_load(Garmin) → 检查: 是否已添加"min_load"字段?
+   ✅ 如果选择search_by_power_zone(Garmin) → 检查: 是否已添加"min_avg_power"字段?
+   ❌ 如果上述任一检查失败 → 重新生成JSON并补充缺失参数
+
+4. **精准补充查询**:
    - 选择最能填补信息缺口的查询工具
    - **关键规则**: 当需求是"最近X天/周/月"补充数据时,必须使用search_recent_trainings + days参数
    - **确保参数配置完整**:必需参数务必提供
    - 重点关注能够补充现有分析的数据
 
-4. **参数配置要求**:
-   - search_recent_trainings: 必须提供days参数
-   - search_by_date_range: 必须提供start_date和end_date参数
-   - search_by_distance_range: 必须提供min_distance_km参数
-   - search_by_heart_rate: 必须提供min_avg_hr参数
+{param_requirements}
 
 5. **阐述补充理由**:明确说明为什么需要这些额外的训练数据
 
@@ -384,12 +456,7 @@ SYSTEM_PROMPT_REFLECTION = f"""
 - 是否有充分的数据支撑训练建议和分析?
 - 是否体现了训练的科学性和个性化?
 
-**查询优化示例**:
-- ✅ 正确: 如果需要补充最近2个月趋势 → search_recent_trainings, days=60
-- ❌ 错误: 如果需要补充最近2个月趋势 → search_by_date_range, start_date="[过去日期]", end_date="[今天]" (不要用date_range查"最近"!)
-- ✅ 正确: 如果需要补充2025年1-3月的历史数据 → search_by_date_range, start_date="2025-01-01", end_date="2025-03-31"
-- ✅ 正确: 如果需要长距离训练数据 → search_by_distance_range, min_distance_km=15
-- ✅ 正确: 如果需要强度分析 → search_by_heart_rate, min_avg_hr=150, max_avg_hr=170
+{query_examples}
 
 请按照以下JSON模式定义格式化输出:
 
@@ -397,9 +464,12 @@ SYSTEM_PROMPT_REFLECTION = f"""
 {json.dumps(output_schema_reflection, indent=2, ensure_ascii=False)}
 </OUTPUT JSON SCHEMA>
 
-确保输出是一个符合上述输出JSON模式定义的JSON对象。
+**重要**: 输出符合上述模式的**实际数据内容**,而不是Schema定义本身。
 只返回JSON对象,不要有解释或额外文本。
 """
+
+# 反思(Reflect)的系统提示词
+SYSTEM_PROMPT_REFLECTION = _generate_reflection_prompt()
 
 # 总结反思的系统提示词
 SYSTEM_PROMPT_REFLECTION_SUMMARY = f"""
@@ -477,7 +547,7 @@ SYSTEM_PROMPT_REFLECTION_SUMMARY = f"""
 {json.dumps(output_schema_reflection_summary, indent=2, ensure_ascii=False)}
 </OUTPUT JSON SCHEMA>
 
-确保输出是一个符合上述输出JSON模式定义的JSON对象。
+**重要**: 输出符合上述模式的**实际数据内容**,而不是Schema定义本身。
 只返回JSON对象,不要有解释或额外文本。
 """
 

@@ -177,7 +177,7 @@ class GarminDataSearch(BaseTrainingDataSearch):
     ) -> DBResponse:
         """查询最近训练记录 (ORM方式)"""
         params_for_log = {'days': days, 'limit': limit}
-        print(f"--- Garmin数据源(ORM): 查询最近训练���录 (params: {params_for_log}) ---")
+        print(f"--- Garmin数据源(ORM): 查询最近训练记录 (params: {params_for_log}) ---")
 
         start_time = datetime.now() - timedelta(days=days)
 
