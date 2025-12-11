@@ -488,7 +488,7 @@
                 </button>
                 <button class="action-btn primary hidden" id="importDataButton" onclick="showDataSourceSelection()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                    导��训练数据
+                    导入训练数据
                 </button>
                 <button class="action-btn primary hidden" id="configButton" onclick="showConfigForm()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m-8-6h6m6 0h6"></path></svg>
@@ -684,11 +684,15 @@
 
                 <div class="test-result hidden" id="importResult"></div>
 
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <div class="action-buttons">
                     <button type="button" class="action-btn secondary" onclick="hideImportForm()">返回</button>
                     <button type="button" class="action-btn primary hidden" id="startImportButton" onclick="startImport()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                         开始导入
+                    </button>
+                    <button class="action-btn success hidden" id="importContinueButton" onclick="goToMain()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        进入系统
                     </button>
                 </div>
             </div>
@@ -741,11 +745,15 @@
 
                 <div class="test-result hidden" id="garminImportResult" style="margin-top: 20px;"></div>
 
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <div class="action-buttons">
                     <button type="button" class="action-btn secondary" onclick="hideGarminImportForm()">返回</button>
                     <button type="button" class="action-btn primary" id="startGarminImportButton" onclick="startGarminImport()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                         开始导入
+                    </button>
+                    <button class="action-btn success hidden" id="garminImportContinueButton" onclick="goToMain()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        进入系统
                     </button>
                 </div>
             </div>
@@ -1118,6 +1126,9 @@
             const startImportButton = document.getElementById('startImportButton');
             startImportButton.classList.add('hidden');
 
+            const importContinueButton = document.getElementById('importContinueButton');
+            importContinueButton.classList.add('hidden');
+
             const importSelectedFileName = document.getElementById('importSelectedFileName');
             importSelectedFileName.textContent = '未选择文件';
 
@@ -1234,6 +1245,9 @@
 
             const startGarminImportButton = document.getElementById('startGarminImportButton');
             startGarminImportButton.disabled = false;
+
+            const garminImportContinueButton = document.getElementById('garminImportContinueButton');
+            garminImportContinueButton.classList.add('hidden');
         }
 
         // 测试Garmin登录
@@ -1296,7 +1310,7 @@
             const importButton = document.getElementById('startGarminImportButton');
 
             resultDiv.className = 'test-result';
-            resultDiv.innerHTML = '<div class="loading"></div> 正在登录Garmin并抓取数据,请稍候...(可能需要1-2分钟)';
+            resultDiv.innerHTML = '<div class="loading"></div> 正在导入Garmin数据...';
             resultDiv.classList.remove('hidden');
             importButton.disabled = true;
 
@@ -1316,6 +1330,9 @@
                 if (result.success) {
                     resultDiv.className = 'test-result success';
                     resultDiv.innerHTML = `✅ ${result.message}<br><small>成功: ${result.result.success}条 | 失败: ${result.result.failed}条</small>`;
+
+                    // 显示进入系统按钮
+                    document.getElementById('garminImportContinueButton').classList.remove('hidden');
 
                     // 同时保存账户到配置
                     fetch('/api/save_config', {
@@ -1353,7 +1370,7 @@
             const importButton = document.getElementById('startImportButton');
 
             resultDiv.className = 'test-result';
-            resultDiv.innerHTML = '<div class="loading"></div> 正在上传并导入数据,请稍候...';
+            resultDiv.innerHTML = '<div class="loading"></div> 正在导入Keep数据...';
             resultDiv.classList.remove('hidden');
             importButton.disabled = true;
 
@@ -1371,6 +1388,9 @@
                 if (result.success) {
                     resultDiv.className = 'test-result success';
                     resultDiv.innerHTML = `✅ ${result.message}<br><small>成功: ${result.result.success}条 | 失败: ${result.result.failed}条</small>`;
+
+                    // 显示进入系统按钮
+                    document.getElementById('importContinueButton').classList.remove('hidden');
 
                     // 重置文件选择
                     selectedImportExcelFile = null;
