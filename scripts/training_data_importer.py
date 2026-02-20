@@ -212,7 +212,7 @@ class GarminDataImporter(BaseImporter):
     """Garmin数据导入器 - 从Garmin Connect在线抓取"""
 
     BATCH_SIZE = 50  # 每次抓取数量
-    MAX_COUNT = 1000  # 最多抓取数量
+    MAX_COUNT = 4000  # 最多抓取数量
 
     def __init__(self, email: str, password: str, is_cn: bool = True, db_engine=None):
         """
@@ -254,26 +254,23 @@ class GarminDataImporter(BaseImporter):
 
         while True:
             try:
+                print(f"[GraminDataImport] 抓取活动数据: {start} ~ {start+self.BATCH_SIZE}")
                 activities = self.client.get_activities(start, self.BATCH_SIZE)
-
                 if not activities:
                     break
-
                 count = len(activities)
                 all_activities.extend(activities)
-
                 # 翻页
                 start += count
-
                 # 安全退出机制
                 if count < self.BATCH_SIZE:
+                    # print(f"[GraminDataImport] 最后一批数据不足{self.BATCH_SIZE}，停止抓取: {start}")
                     break
                 if start >= self.MAX_COUNT:
+                    # print(f"[GraminDataImport] 达到最大抓取数量: {start}")
                     break
-
                 # 防止请求过快
                 time.sleep(1)
-
             except Exception as e:
                 break
 
@@ -281,9 +278,11 @@ class GarminDataImporter(BaseImporter):
         running_activities = []
         for act in all_activities:
             act_type = act.get('activityType', {}).get('typeKey', '')
-            if 'running' in act_type or 'treadmill' in act_type:
+            # print(f"[GraminDataImport] 活动类型: {act_type}")
+            # if 'running' in act_type or 'treadmill' in act_type:
+            # 不考虑在跑步机上的运动
+            if 'running' in act_type:
                 running_activities.append(act)
-
         return running_activities
 
     def parse_activity(self, act: dict) -> dict:
