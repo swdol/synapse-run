@@ -182,6 +182,24 @@
     </main>
 
     <script>
+        function convertGMTToLocal(gmtTimeStr) {
+            if (!gmtTimeStr || gmtTimeStr === '-') return '-';
+
+            // 将GMT时间字符串转换为Date对象
+            // 注意：需要在时间字符串后添加 'GMT' 或 'Z' 来明确指定时区
+            const gmtDate = new Date(gmtTimeStr + ' GMT');
+
+            // 获取本地时间字符串
+            const year = gmtDate.getFullYear();
+            const month = String(gmtDate.getMonth() + 1).padStart(2, '0');
+            const day = String(gmtDate.getDate()).padStart(2, '0');
+            const hours = String(gmtDate.getHours()).padStart(2, '0');
+            const minutes = String(gmtDate.getMinutes()).padStart(2, '0');
+            const seconds = String(gmtDate.getSeconds()).padStart(2, '0');
+
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
         let currentPage = 1;
         let totalPages = 1;
 
@@ -210,7 +228,8 @@
                         row.className = 'table-row-hover transition-colors group';
 
                         // 格式化数据
-                        const startTime = record.start_time ? record.start_time.replace(' ', ' ') : '-';
+                        // 运动启始时间从数据库中的格林尼治时间转换为本地时间进行渲染
+                        const startTime = record.start_time ? convertGMTToLocal(record.start_time) : '-';
                         const distance = record.distance_meters ? (record.distance_meters / 1000).toFixed(2) : '-';
                         const calories = record.calories || '-';
                         const duration = formatDuration(record.duration_seconds);
